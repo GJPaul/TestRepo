@@ -1,0 +1,89 @@
+"""
+INTENTIONALLY VULNERABLE PYTHON FILE
+For educational / security testing purposes ONLY
+"""
+
+import os
+import sqlite3
+import pickle
+import subprocess
+
+# -----------------------------
+# 1. Hardcoded secret (bad)
+# -----------------------------
+API_KEY = "sk_test_1234567890"
+
+
+# -----------------------------
+# 2. SQL Injection vulnerability
+# -----------------------------
+def login(username, password):
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
+
+    # Vulnerable: string formatting instead of parameterized query
+    query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
+    cursor.execute(query)
+
+    result = cursor.fetchone()
+    conn.close()
+    return result
+
+
+# -----------------------------
+# 3. Command Injection vulnerability
+# -----------------------------
+def ping_host(host):
+    # Vulnerable: user input passed directly to shell
+    command = "ping -c 1 " + host
+    return subprocess.getoutput(command)
+
+
+# -----------------------------
+# 4. Insecure deserialization
+# -----------------------------
+def load_user_profile(data):
+    # Vulnerable: pickle can execute arbitrary code
+    return pickle.loads(data)
+
+
+# -----------------------------
+# 5. Path Traversal vulnerability
+# -----------------------------
+def read_file(filename):
+    # Vulnerable: no validation of path
+    with open(filename, "r") as f:
+        return f.read()
+
+
+# -----------------------------
+# 6. Use of eval()
+# -----------------------------
+def calculate(expression):
+    # Vulnerable: arbitrary code execution
+    return eval(expression)
+
+
+# -----------------------------
+# 7. Insecure environment usage
+# -----------------------------
+def get_admin_status():
+    # Vulnerable: trusting environment variables
+    return os.getenv("IS_ADMIN") == "true"
+
+
+# -----------------------------
+# 8. Weak authentication logic
+# -----------------------------
+def is_authenticated(token):
+    # Vulnerable: predictable token check
+    return token == "admin"
+
+
+# -----------------------------
+# Example usage (unsafe)
+# -----------------------------
+if __name__ == "__main__":
+    print("Login result:", login("admin", "' OR '1'='1"))
+    print("Ping:", ping_host("google.com; ls"))
+    print("Calc:", calculate("__import__('os').system('ls')"))
